@@ -165,9 +165,9 @@ def train():
     d_clip = [v.assign(tf.clip_by_value(v, -0.01, 0.01)) for v in d_vars]
     
     batch_size = BATCH_SIZE
-    drone_iterator, samples_num = loadData()
+    drone_iterator, dataset_size = loadData()
     
-    num_o_batches = int(samples_num / BATCH_SIZE)
+    num_o_batches = int(dataset_size / BATCH_SIZE)
     sess = tf.Session()
     sess.run(drone_iterator.initializer)
     saver = tf.train.Saver()
@@ -183,32 +183,26 @@ def train():
     print('************************************')
     print('GET READY FOR DZZZZHHHHHHHHHHHHHHHHH')
     print('************************************')
-    print('total training sample num: %d' % samples_num)
+    print('total training sample num: %d' % dataset_size)
     print('batch size: %d, batch num per epoch: %d, epoch num: %d' % (batch_size, num_o_batches, EPOCH))
     print('start training...')
     for epoch_iter in range(EPOCH):
         print("Running epoch %i/%i..." % (epoch_iter, EPOCH))
-        for batch_iter in range(num_o_batches):
-            d_iters = 5
-            g_iters = 1
+        for _ in range(num_o_batches):
+            #d_iters = 5
+            #g_iters = 1
             train_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
-            for k in range(d_iters):
-                print('k in range(d_iters): %i' % k)
-                train_drone = sess.run(drone_iterator.get_next())
-                print(train_drone.shape)
-                #wgan clip weights
-                sess.run(d_clip)
-                
-                _, dLoss = sess.run([trainer_d, d_loss],
-                                    feed_dict={random_input: train_noise, real_drone: train_drone, is_train: True})
-
-            for k in range(g_iters):
-                print('k in range(g_iters): %i' % k)
+            train_drone = sess.run(drone_iterator.get_next())
+            print(train_drone[0, 100, 100, 0])
+            sess.run(d_clip)
+            _, dLoss = sess.run([trainer_d, d_loss],
+                                feed_dict={random_input: train_noise, real_drone: train_drone, is_train: True})
+            if (epoch_iter % 5 == 0):
                 # train_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
                 _, gLoss = sess.run([trainer_g, g_loss],
                                     feed_dict={random_input: train_noise, is_train: True})
-
-            print('train:[%d/%d],d_loss:%f,g_loss:%f' % (epoch_iter, batch_iter, dLoss, gLoss))
+            #print('train:[%d/%d],d_loss:%f,g_loss:%f' % (epoch_iter, batch_iter, dLoss, gLoss))
+        sess.run(drone_iterator.initializer)
             
         # save check point every 500 epoch
         #if epoch_iter % 10 == 0:
@@ -223,7 +217,7 @@ def train():
             # imgtest = imgtest * 255.0
             # imgtest.astype(np.uint8)
             print(dronetest.shape)
-            #print('train:[%d],d_loss:%f,g_loss:%f' % (i, dLoss, gLoss))
+            print('train:[%d],d_loss:%f,g_loss:%f' % (i, dLoss, gLoss))
     coord.request_stop()
     coord.join(threads)
 
