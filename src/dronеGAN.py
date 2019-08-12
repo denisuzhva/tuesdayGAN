@@ -10,13 +10,12 @@ import random
 
 
 HEIGHT, WIDTH, CHANNEL = 256, 256, 2
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 SHUFFLE_BUFFER_SIZE = 100
 EPOCH = 10
 L_RATE = 2e-4
 VER = 'cyber_dzhhhhhhhhh'
-DATASET_LABEL = '256'
-new_dzhhh_path = './' + VER
+DATASET_LABEL = '1152'
 
     
 def lrelu(x, n, leak=0.2): 
@@ -56,26 +55,26 @@ def generator(input, random_dim, is_train, reuse=False):
                                            name='conv2')
         bn2 = tf.contrib.layers.batch_norm(conv2, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn2')
         act2 = tf.nn.relu(bn2, name='act2')
-        # 16*16*128
+        # 32*32*128
         conv3 = tf.layers.conv2d_transpose(act2, c32, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
                                            kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
                                            name='conv3')
         bn3 = tf.contrib.layers.batch_norm(conv3, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn3')
         act3 = tf.nn.relu(bn3, name='act3')
-        # 32*32*64
+        # 64*64*64
         conv4 = tf.layers.conv2d_transpose(act3, c64, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
                                            kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
                                            name='conv4')
         bn4 = tf.contrib.layers.batch_norm(conv4, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn4')
         act4 = tf.nn.relu(bn4, name='act4')
-        # 64*64*32
+        # 128*128*32
         conv5 = tf.layers.conv2d_transpose(act4, c128, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
                                            kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
                                            name='conv5')
         bn5 = tf.contrib.layers.batch_norm(conv5, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn5')
         act5 = tf.nn.relu(bn5, name='act5')
         
-        #128*128*2
+        #256*256*2
         conv6 = tf.layers.conv2d_transpose(act5, output_dim, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
                                            kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
                                            name='conv6')
@@ -121,8 +120,7 @@ def discriminator(input, is_train, reuse=False):
                                  name='conv5')
         bn5 = tf.contrib.layers.batch_norm(conv5, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn5')
         act5 = lrelu(bn5, n='act5')
-
-
+        
         # start from act5
         dim = int(np.prod(act5.get_shape()[1:]))
         fc1 = tf.reshape(act5, shape=[-1, dim], name='fc1')
@@ -149,7 +147,6 @@ def train():
     
     # wgan
     fake_drone = generator(random_input, random_dim, is_train)
-    
     real_result = discriminator(real_drone, is_train)
     fake_result = discriminator(fake_drone, is_train, reuse=True)
 
@@ -164,7 +161,6 @@ def train():
     # clip discriminator weights
     d_clip = [v.assign(tf.clip_by_value(v, -0.01, 0.01)) for v in d_vars]
     
-    batch_size = BATCH_SIZE
     batch_iterator, dataset_size = loadData()
     next_batch = batch_iterator.get_next()
     
@@ -185,43 +181,43 @@ def train():
     print('GET READY FOR DZZZZHHHHHHHHHHHHHHHHH')
     print('************************************')
     print('total training sample num: %d' % dataset_size)
-    print('batch size: %d, batch num per epoch: %d, epoch num: %d' % (batch_size, num_o_batches, EPOCH))
+    print('batch size: %d, batch num per epoch: %d, epoch num: %d' % (BATCH_SIZE, num_o_batches, EPOCH))
     print('start training...')
+    start_time = time.time()
     for epoch_iter in range(EPOCH):
         print("Running epoch %i/%i..." % (epoch_iter, EPOCH))
         for batch_iter in range(num_o_batches):
             #d_iters = 5
             #g_iters = 1
-            train_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
+            train_noise = np.random.uniform(-1.0, 1.0, size=[BATCH_SIZE, random_dim]).astype(np.float32)
             train_drone = sess.run(next_batch)
             #print(train_drone[0, 100, 100, 0])
             sess.run(d_clip)
             _, dLoss = sess.run([trainer_d, d_loss],
                                 feed_dict={random_input: train_noise, real_drone: train_drone, is_train: True})
-            if epoch_iter % 5 == 0:
+            if (epoch_iter + 1) % 5 == 0:
                 # train_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
                 _, gLoss = sess.run([trainer_g, g_loss],
                                     feed_dict={random_input: train_noise, is_train: True})
                 print('train:[%d/%d],d_loss:%f,g_loss:%f' % (epoch_iter, batch_iter, dLoss, gLoss))
-        sess.run(batch_iterator.initializer)
-            
-        # save check point every 500 epoch
-        #if epoch_iter % 10 == 0:
-        #    if not os.path.exists('./model/' + VER):
-        #        os.makedirs('./model/' + VER)
-        #    saver.save(sess, './model/' + VER + '/' + str(epoch_iter))  
-        #if epoch_iter % 2 == 0:
-            #if not os.path.exists(new_dzhhh_path):
-            #    os.makedirs(new_dzhhh_path)
-            #sample_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
-            #drone_test = sess.run(fake_drone, feed_dict={random_input: sample_noise, is_train: False})
-            # imgtest = imgtest * 255.0
-            # imgtest.astype(np.uint8)
-            #print(drone_test.shape)
+        sess.run(batch_iterator.initializer)    
+        if (epoch_iter + 1) % 100 == 0:
+            if not os.path.exists('../../DGAN_MODEL/' + VER):
+                os.makedirs('../../DGAN_MODEL/' + VER)
+            saver.save(sess, '../../DGAN_MODEL/' + VER + '/' + str(epoch_iter))  
+        if (epoch_iter + 1) % 500 == 0:
+            if not os.path.exists('../../DGAN_TEST/' + VER):
+                os.makedirs('../../DGAN_TEST/' + VER)
+            sample_noise = np.random.uniform(-1.0, 1.0, size=[BATCH_SIZE, random_dim]).astype(np.float32)
+            drone_test = sess.run(fake_drone, feed_dict={random_input: sample_noise, is_train: False})
+            np.save('../../DGAN_TEST/' + VER + '/' + str(epoch_iter) , drone_test)
             #print('train:[%d],d_loss:%f,g_loss:%f' % (epoch, dLoss, gLoss))
+        print("--- %s seconds passed... ---" % (time.time() - start_time))
     coord.request_stop()
     coord.join(threads)
 
 
 if __name__ == '__main__':
+    start_time = time.time()
     train()
+    print("--- %s seconds overall ---" % (time.time() - start_time))
