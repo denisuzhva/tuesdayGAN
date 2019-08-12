@@ -165,11 +165,12 @@ def train():
     d_clip = [v.assign(tf.clip_by_value(v, -0.01, 0.01)) for v in d_vars]
     
     batch_size = BATCH_SIZE
-    drone_iterator, dataset_size = loadData()
+    batch_iterator, dataset_size = loadData()
+    next_batch = batch_iterator.get_next()
     
     num_o_batches = int(dataset_size / BATCH_SIZE)
     sess = tf.Session()
-    sess.run(drone_iterator.initializer)
+    sess.run(batch_iterator.initializer)
     saver = tf.train.Saver()
     sess.run(tf.global_variables_initializer())
     sess.run(tf.local_variables_initializer())
@@ -188,36 +189,36 @@ def train():
     print('start training...')
     for epoch_iter in range(EPOCH):
         print("Running epoch %i/%i..." % (epoch_iter, EPOCH))
-        for _ in range(num_o_batches):
+        for batch_iter in range(num_o_batches):
             #d_iters = 5
             #g_iters = 1
             train_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
-            train_drone = sess.run(drone_iterator.get_next())
-            print(train_drone[0, 100, 100, 0])
+            train_drone = sess.run(next_batch)
+            #print(train_drone[0, 100, 100, 0])
             sess.run(d_clip)
             _, dLoss = sess.run([trainer_d, d_loss],
                                 feed_dict={random_input: train_noise, real_drone: train_drone, is_train: True})
-            if (epoch_iter % 5 == 0):
+            if epoch_iter % 5 == 0:
                 # train_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
                 _, gLoss = sess.run([trainer_g, g_loss],
                                     feed_dict={random_input: train_noise, is_train: True})
-            #print('train:[%d/%d],d_loss:%f,g_loss:%f' % (epoch_iter, batch_iter, dLoss, gLoss))
-        sess.run(drone_iterator.initializer)
+                print('train:[%d/%d],d_loss:%f,g_loss:%f' % (epoch_iter, batch_iter, dLoss, gLoss))
+        sess.run(batch_iterator.initializer)
             
         # save check point every 500 epoch
         #if epoch_iter % 10 == 0:
         #    if not os.path.exists('./model/' + VER):
         #        os.makedirs('./model/' + VER)
         #    saver.save(sess, './model/' + VER + '/' + str(epoch_iter))  
-        if epoch_iter % 2 == 0:
-            if not os.path.exists(new_dzhhh_path):
-                os.makedirs(new_dzhhh_path)
-            sample_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
-            dronetest = sess.run(fake_drone, feed_dict={random_input: sample_noise, is_train: False})
+        #if epoch_iter % 2 == 0:
+            #if not os.path.exists(new_dzhhh_path):
+            #    os.makedirs(new_dzhhh_path)
+            #sample_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
+            #drone_test = sess.run(fake_drone, feed_dict={random_input: sample_noise, is_train: False})
             # imgtest = imgtest * 255.0
             # imgtest.astype(np.uint8)
-            print(dronetest.shape)
-            print('train:[%d],d_loss:%f,g_loss:%f' % (i, dLoss, gLoss))
+            #print(drone_test.shape)
+            #print('train:[%d],d_loss:%f,g_loss:%f' % (epoch, dLoss, gLoss))
     coord.request_stop()
     coord.join(threads)
 
