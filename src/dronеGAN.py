@@ -14,8 +14,8 @@ BATCH_SIZE = 64
 SHUFFLE_BUFFER_SIZE = 100
 EPOCH = 10
 L_RATE = 2e-4
-VER = 'dzhhhhhhhhh'
-DATASET_LABEL = '200'
+VER = 'cyber_dzhhhhhhhhh'
+DATASET_LABEL = '256'
 new_dzhhh_path = './' + VER
 
     
@@ -167,36 +167,35 @@ def train():
     batch_size = BATCH_SIZE
     drone_iterator, samples_num = loadData()
     
-    batch_num = int(samples_num / BATCH_SIZE)
+    num_o_batches = int(samples_num / BATCH_SIZE)
     sess = tf.Session()
     sess.run(drone_iterator.initializer)
     saver = tf.train.Saver()
     sess.run(tf.global_variables_initializer())
     sess.run(tf.local_variables_initializer())
 
-    save_path = saver.save(sess, "/tmp/model.ckpt")
-    ckpt = tf.train.latest_checkpoint('./model/' + VER)
-    saver.restore(sess, save_path)
+    #save_path = saver.save(sess, "/tmp/model.ckpt")
+    #ckpt = tf.train.latest_checkpoint('./model/' + VER)
+    #saver.restore(sess, save_path)
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
     print('************************************')
     print('GET READY FOR DZZZZHHHHHHHHHHHHHHHHH')
     print('************************************')
-    print('total training sample num:%d' % samples_num)
-    print('batch size: %d, batch num per epoch: %d, epoch num: %d' % (batch_size, batch_num, EPOCH))
+    print('total training sample num: %d' % samples_num)
+    print('batch size: %d, batch num per epoch: %d, epoch num: %d' % (batch_size, num_o_batches, EPOCH))
     print('start training...')
-    for i in range(EPOCH):
-        print("Running epoch {}/{}...".format(i, EPOCH))
-        for j in range(batch_num):
-            #print(j)
+    for epoch_iter in range(EPOCH):
+        print("Running epoch %i/%i..." % (epoch_iter, EPOCH))
+        for batch_iter in range(num_o_batches):
             d_iters = 5
             g_iters = 1
-
             train_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
             for k in range(d_iters):
                 print('k in range(d_iters): %i' % k)
                 train_drone = sess.run(drone_iterator.get_next())
+                print(train_drone.shape)
                 #wgan clip weights
                 sess.run(d_clip)
                 
@@ -209,14 +208,14 @@ def train():
                 _, gLoss = sess.run([trainer_g, g_loss],
                                     feed_dict={random_input: train_noise, is_train: True})
 
-            print('train:[%d/%d],d_loss:%f,g_loss:%f' % (i, j, dLoss, gLoss))
+            print('train:[%d/%d],d_loss:%f,g_loss:%f' % (epoch_iter, batch_iter, dLoss, gLoss))
             
         # save check point every 500 epoch
-        if i%10 == 0:
-            if not os.path.exists('./model/' + VER):
-                os.makedirs('./model/' + VER)
-            saver.save(sess, './model/' + VER + '/' + str(i))  
-        if i%2 == 0:
+        #if epoch_iter % 10 == 0:
+        #    if not os.path.exists('./model/' + VER):
+        #        os.makedirs('./model/' + VER)
+        #    saver.save(sess, './model/' + VER + '/' + str(epoch_iter))  
+        if epoch_iter % 2 == 0:
             if not os.path.exists(new_dzhhh_path):
                 os.makedirs(new_dzhhh_path)
             sample_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
