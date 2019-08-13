@@ -1,2 +1,2 @@
-# droneGAN
-A generative adversarial network that loves drone doom metal
+# tuesdayGAN
+A generative adversarial network that loves sound art
