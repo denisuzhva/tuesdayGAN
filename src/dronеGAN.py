@@ -243,7 +243,7 @@ def test():
             os.makedirs(TEST_PATH)
         sample_noise = np.random.uniform(-1.0, 1.0, size=[BATCH_SIZE, random_dim]).astype(np.float32)
         drone_test = sess.run(fake_drone, feed_dict={random_input: sample_noise, is_train: False})
-        np.save(TEST_PATH + str(epoch_iter) , drone_test)
+        np.save(TEST_PATH + str(test_iter) , drone_test)
         #print('train:[%d],d_loss:%f,g_loss:%f' % (epoch, dLoss, gLoss))
         print("--- %s seconds passed... ---" % (time.time() - start_time))
     coord.request_stop()
