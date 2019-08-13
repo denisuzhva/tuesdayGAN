@@ -12,9 +12,12 @@ import random
 HEIGHT, WIDTH, CHANNEL = 256, 256, 2
 BATCH_SIZE = 128
 SHUFFLE_BUFFER_SIZE = 100
-EPOCH = 10
+EPOCH = 1000
+TEST_BATCHES = 10
 L_RATE = 2e-4
-VER = 'cyber_dzhhhhhhhhh'
+MODEL_PATH = '../../DGAN_MODEL/'
+DATASET_PATH = '../../DGAN_DATASET/'
+TEST_PATH = '../../DGAN_TEST/'
 DATASET_LABEL = '1152'
 
     
@@ -23,7 +26,7 @@ def lrelu(x, n, leak=0.2):
 
 
 def loadData():   
-    dataset_dir = '../../DGAN_DATASET/sunn1_' + DATASET_LABEL + '.npy'
+    dataset_dir =  DATASET_PATH + 'sunn1_' + DATASET_LABEL + '.npy'
     np_dataset = np.load(dataset_dir)
     dataset_size = np_dataset.shape[0]
     tf_dataset = tf.data.Dataset.from_tensor_slices(np_dataset)
@@ -145,7 +148,6 @@ def train():
         random_input = tf.placeholder(tf.float32, shape=[None, random_dim], name='rand_input')
         is_train = tf.placeholder(tf.bool, name='is_train')
     
-    # wgan
     fake_drone = generator(random_input, random_dim, is_train)
     real_result = discriminator(real_drone, is_train)
     fake_result = discriminator(fake_drone, is_train, reuse=True)
@@ -202,22 +204,52 @@ def train():
                 print('train:[%d/%d],d_loss:%f,g_loss:%f' % (epoch_iter, batch_iter, dLoss, gLoss))
         sess.run(batch_iterator.initializer)    
         if (epoch_iter + 1) % 100 == 0:
-            if not os.path.exists('../../DGAN_MODEL/' + VER):
-                os.makedirs('../../DGAN_MODEL/' + VER)
-            saver.save(sess, '../../DGAN_MODEL/' + VER + '/' + str(epoch_iter))  
-        if (epoch_iter + 1) % 500 == 0:
-            if not os.path.exists('../../DGAN_TEST/' + VER):
-                os.makedirs('../../DGAN_TEST/' + VER)
-            sample_noise = np.random.uniform(-1.0, 1.0, size=[BATCH_SIZE, random_dim]).astype(np.float32)
-            drone_test = sess.run(fake_drone, feed_dict={random_input: sample_noise, is_train: False})
-            np.save('../../DGAN_TEST/' + VER + '/' + str(epoch_iter) , drone_test)
-            #print('train:[%d],d_loss:%f,g_loss:%f' % (epoch, dLoss, gLoss))
+            if not os.path.exists(MODEL_PATH):
+                os.makedirs(MODEL_PATH)
+            saver.save(sess, MODEL_PATH + str(epoch_iter))  
+        print("--- %s seconds passed... ---" % (time.time() - start_time))
+    coord.request_stop()
+    coord.join(threads)
+
+
+def test():
+    random_dim = 100
+    
+    with tf.variable_scope('input'):
+        random_input = tf.placeholder(tf.float32, shape=[None, random_dim], name='rand_input')
+        is_train = tf.placeholder(tf.bool, name='is_train')
+    
+    fake_drone = generator(random_input, random_dim, is_train)
+    
+    sess = tf.Session()
+    saver = tf.train.Saver()
+    sess.run(tf.global_variables_initializer())
+    sess.run(tf.local_variables_initializer())
+
+    epoch_iter = 199
+    restore_path = MODEL_PATH + str(epoch_iter)
+    saver.restore(sess, restore_path)
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+
+    print('************************************')
+    print('GET READY FOR DZZZZHHHHHHHHHHHHHHHHH')
+    print('************************************')
+    print('start generating dzhhh...')
+    start_time = time.time()
+    for test_iter in range(TEST_BATCHES):
+        print("Running batch %i/%i..." % (test_iter, TEST_BATCHES)) 
+        if not os.path.exists(TEST_PATH):
+            os.makedirs(TEST_PATH)
+        sample_noise = np.random.uniform(-1.0, 1.0, size=[BATCH_SIZE, random_dim]).astype(np.float32)
+        drone_test = sess.run(fake_drone, feed_dict={random_input: sample_noise, is_train: False})
+        np.save(TEST_PATH + str(epoch_iter) , drone_test)
+        #print('train:[%d],d_loss:%f,g_loss:%f' % (epoch, dLoss, gLoss))
         print("--- %s seconds passed... ---" % (time.time() - start_time))
     coord.request_stop()
     coord.join(threads)
 
 
 if __name__ == '__main__':
-    start_time = time.time()
-    train()
-    print("--- %s seconds overall ---" % (time.time() - start_time))
+    #train()
+    test()
