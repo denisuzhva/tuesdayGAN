@@ -24,7 +24,6 @@ class T_Thinker():
         ):
         self.__dataset_size = dataset_size
         self.__epoch_num = epoch_num
-        self.__batch_size = batch_size
         self.__freq_domain = freq_domain
         self.__time_domain = time_domain
         self.__channel_num = channel_num
@@ -40,7 +39,7 @@ class T_Thinker():
                 batch_size
             )
 
-    def T_train(self, learning_rate, model_path):
+    def T_train(self, learning_rate, model_path, train_batch_size):
         with tf.variable_scope('input'):
             real_drone = tf.placeholder(tf.float32, 
                                         shape = [None, self.__freq_domain, self.__time_domain, self.__channel_num], 
@@ -60,7 +59,7 @@ class T_Thinker():
         d_clip = [v.assign(tf.clip_by_value(v, -0.01, 0.01)) for v in d_vars]
         batch_iterator = self.__loader.T_load()
         next_batch = batch_iterator.get_next()
-        num_o_batches = int(self.__dataset_size / self.__batch_size)
+        num_o_batches = int(self.__dataset_size / train_batch_size)
         sess = tf.Session()
         sess.run(batch_iterator.initializer)
         saver = tf.train.Saver()
@@ -73,7 +72,7 @@ class T_Thinker():
         print('************************************')
         print('total training sample num: %d' % self.__dataset_size)
         print('batch size: %d, batch num per epoch: %d, epoch num: %d' % (
-                self.__batch_size, 
+                train_batch_size, 
                 num_o_batches, 
                 self.__epoch_num
             ))
@@ -84,7 +83,7 @@ class T_Thinker():
             for batch_iter in range(num_o_batches):
                 #d_iters = 5
                 #g_iters = 1
-                train_noise = np.random.uniform(-1.0, 1.0, size=[self.__batch_size, self.__random_dim]).astype(np.float32)
+                train_noise = np.random.uniform(-1.0, 1.0, size=[train_batch_size, self.__random_dim]).astype(np.float32)
                 train_drone = sess.run(next_batch)
                 #print(train_drone[0, 100, 100, 0])
                 sess.run(d_clip)
@@ -104,7 +103,7 @@ class T_Thinker():
         coord.request_stop()
         coord.join(threads)
 
-    def T_test(self, model_path, model_name, test_path, test_batches):
+    def T_test(self, model_path, model_name, test_batch_size, test_path, test_batches):
         #tf.reset_default_graph()
         with tf.variable_scope('input'):
             random_input = tf.placeholder(tf.float32, shape=[None, self.__random_dim], name='rand_input')
@@ -126,7 +125,7 @@ class T_Thinker():
             print("Generating batch %i/%i..." % (test_iter+1, test_batches)) 
             if not os.path.exists(test_path):
                 os.makedirs(test_path)
-            sample_noise = np.random.uniform(-1.0, 1.0, size=[self.__batch_size, self.__random_dim]).astype(np.float32)
+            sample_noise = np.random.uniform(-1.0, 1.0, size=[test_batch_size, self.__random_dim]).astype(np.float32)
             drone_test = sess.run(fake_drone, feed_dict={random_input: sample_noise, is_train: False})
             np.save(test_path + str(test_iter) , drone_test)
             #print('train:[%d],d_loss:%f,g_loss:%f' % (epoch, dLoss, gLoss))
