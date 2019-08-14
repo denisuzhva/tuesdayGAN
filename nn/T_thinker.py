@@ -35,7 +35,6 @@ class T_Thinker():
             )
         self.__loader = T_Loader(
                 dataset_path, 
-                dataset_ver,
                 dataset_size,
                 shuffle_buffer_size,
                 batch_size
@@ -106,10 +105,11 @@ class T_Thinker():
         coord.join(threads)
 
     def T_test(self, model_path, model_name, test_path, test_batches):
+        #tf.reset_default_graph()
         with tf.variable_scope('input'):
             random_input = tf.placeholder(tf.float32, shape=[None, self.__random_dim], name='rand_input')
             is_train = tf.placeholder(tf.bool, name='is_train')
-        fake_drone = self.__model.T_gen(random_input, self.__random_dim, is_train)
+        fake_drone = self.__model.T_gen(random_input, self.__random_dim, is_train, reuse=True)
         sess = tf.Session()
         saver = tf.train.Saver()
         sess.run(tf.global_variables_initializer())
