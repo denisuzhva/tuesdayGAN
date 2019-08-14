@@ -86,7 +86,7 @@ class T_Thinker():
                 train_noise = np.random.uniform(-1.0, 1.0, size=[train_batch_size, self.__random_dim]).astype(np.float32)
                 train_drone = sess.run(next_batch)
                 #print(train_drone[0, 100, 100, 0])
-                sess.run(d_clip)
+                #sess.run(d_clip)
                 _, dLoss = sess.run([trainer_d, d_loss],
                                     feed_dict={random_input: train_noise, real_drone: train_drone, is_train: True})
                 if (epoch_iter + 1) % 5 == 0:
