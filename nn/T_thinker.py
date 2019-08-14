@@ -49,7 +49,7 @@ class T_Thinker():
         fake_drone = self.__model.T_gen(random_input, self.__random_dim, is_train)
         real_result = self.__model.T_dis(real_drone, is_train)
         fake_result = self.__model.T_dis(fake_drone, is_train, reuse=True)
-        d_loss = tf.reduce_mean(fake_result) - tf.reduce_mean(real_result)
+        d_loss = tf.abs(tf.reduce_mean(tf.log(fake_result) - tf.log(real_result)))
         g_loss = -tf.reduce_mean(fake_result)
         t_vars = tf.trainable_variables()
         d_vars = [var for var in t_vars if 'dis' in var.name]
@@ -89,7 +89,7 @@ class T_Thinker():
                 #sess.run(d_clip)
                 _, dLoss = sess.run([trainer_d, d_loss],
                                     feed_dict={random_input: train_noise, real_drone: train_drone, is_train: True})
-                if (epoch_iter + 1) % 5 == 0:
+                if (epoch_iter + 1) % 2 == 0:
                     # train_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
                     _, gLoss = sess.run([trainer_g, g_loss],
                                         feed_dict={random_input: train_noise, is_train: True})
