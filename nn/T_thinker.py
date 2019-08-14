@@ -108,7 +108,7 @@ class T_Thinker():
         with tf.variable_scope('input'):
             random_input = tf.placeholder(tf.float32, shape=[None, self.__random_dim], name='rand_input')
             is_train = tf.placeholder(tf.bool, name='is_train')
-        fake_drone = self.__model.T_gen(random_input, self.__random_dim, is_train, reuse=True)
+        fake_drone = self.__model.T_gen(random_input, self.__random_dim, is_train, reuse=False)
         sess = tf.Session()
         saver = tf.train.Saver()
         sess.run(tf.global_variables_initializer())
