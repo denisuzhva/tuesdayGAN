@@ -28,6 +28,7 @@ class T_Thinker():
         self.__time_domain = time_domain
         self.__channel_num = channel_num
         self.__random_dim = random_dim
+        self.__reuse_flag = False
         self.__model = T_Model(
                 freq_domain, 
                 channel_num
@@ -49,6 +50,7 @@ class T_Thinker():
         fake_drone = self.__model.T_gen(random_input, self.__random_dim, is_train)
         real_result = self.__model.T_dis(real_drone, is_train)
         fake_result = self.__model.T_dis(fake_drone, is_train, reuse=True)
+        self.__reuse_flag = True
         d_loss = tf.reduce_mean(fake_result) - tf.reduce_mean(real_result)
         g_loss = -tf.reduce_mean(fake_result)
         t_vars = tf.trainable_variables()
@@ -108,7 +110,7 @@ class T_Thinker():
         with tf.variable_scope('input'):
             random_input = tf.placeholder(tf.float32, shape=[None, self.__random_dim], name='rand_input')
             is_train = tf.placeholder(tf.bool, name='is_train')
-        fake_drone = self.__model.T_gen(random_input, self.__random_dim, is_train, reuse=True)
+        fake_drone = self.__model.T_gen(random_input, self.__random_dim, is_train, reuse=self.__reuse_flag)
         sess = tf.Session()
         saver = tf.train.Saver()
         sess.run(tf.global_variables_initializer())
