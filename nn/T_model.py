@@ -93,5 +93,5 @@ class T_Model():
             b2 = tf.get_variable('b2', shape=[1], dtype=tf.float32,
                                     initializer=tf.constant_initializer(0.0))
             logits = tf.add(tf.matmul(fc1, w2), b2, name='logits')
-            acted_out = tf.nn.sigmoid(logits)
-            return acted_out
+            logits = tf.nn.sigmoid(logits)
+            return logits
