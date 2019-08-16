@@ -92,10 +92,11 @@ class T_Thinker():
                 print("Running epoch %i/%i..." % (epoch_iter+1, self.__epoch_num))
 
                 train_noise = np.random.uniform(-1.0, 1.0, size=[train_batch_size, self.__random_dim]).astype(np.float32)
-                sess.run([batch_iterator.initializer, d_clip], 
-                         feed_dict={random_input: train_noise, real_data: np_dataset, is_train: True})
+
                 dis_loss_val = 0
                 for d_iter in range(d_iters):
+                    sess.run([batch_iterator.initializer, d_clip], 
+                         feed_dict={random_input: train_noise, real_data: np_dataset, is_train: True})
                     try:
                         print('d_iter:%i' % d_iter)
                         batch_it = 1
@@ -108,10 +109,11 @@ class T_Thinker():
                     except tf.errors.OutOfRangeError:
                         pass
                 
-                sess.run([batch_iterator.initializer, d_clip], 
-                         feed_dict={random_input: train_noise, real_data: np_dataset, is_train: Truerandom_input: train_noise, is_train: True})
+                
                 gen_loss_val = 0
                 for g_iter in range(g_iters):
+                    sess.run(batch_iterator.initializer, 
+                             feed_dict={random_input: train_noise, real_data: np_dataset, is_train: Truerandom_input: train_noise, is_train: True})
                     try:
                         print('g_iter:%i' % g_iter)
                         batch_it = 1
