@@ -54,7 +54,7 @@ class T_Thinker():
         real_result = self.__model.T_dis(real_batch, is_train)
         fake_result = self.__model.T_dis(fake_batch, is_train, reuse=True)
 
-        d_loss = tf.reduce_mean(fake_result - real_result)
+        d_loss = tf.reduce_mean(fake_result) - tf.reduce_mean(real_result)
         g_loss = -tf.reduce_mean(fake_result)
         
         t_vars = tf.trainable_variables()
@@ -95,14 +95,15 @@ class T_Thinker():
 
                 dis_loss_val = 0
                 for d_iter in range(d_iters):
-                    sess.run([batch_iterator.initializer, d_clip], 
+                    sess.run(batch_iterator.initializer, 
                          feed_dict={random_input: train_noise, real_data: np_dataset, is_train: True})
                     try:
                         print('d_iter:%i' % d_iter)
                         batch_it = 1
                         while True:
-                            print('batch iter:%i' % batch_it)
+                            #print('batch iter:%i' % batch_it)
                             batch_it += 1
+                            sess.run(d_clip)
                             _, dis_loss_val_inst = sess.run([trainer_d, d_loss], 
                                                             feed_dict={random_input: train_noise, real_data: np_dataset, is_train: True})
                             dis_loss_val += dis_loss_val_inst
@@ -118,9 +119,9 @@ class T_Thinker():
                                                         feed_dict={random_input: train_noise, is_train: True})
                         gen_loss_val += gen_loss_val_inst
                 
-                print('d_loss:%f, g_loss:%f' % (-dis_loss_val, -gen_loss_val))
+                print('d_loss:%f, g_loss:%f' % (dis_loss_val, gen_loss_val))
                 
-                if (epoch_iter + 1) % 20 == 0:
+                if (epoch_iter + 1) % (self.__epoch_num // 10) == 0:
                     if not os.path.exists(model_path):
                         os.makedirs(model_path)
                     saver.save(sess, model_path + str(epoch_iter+1))  
