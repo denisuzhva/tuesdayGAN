@@ -95,27 +95,31 @@ class T_Thinker():
                 sess.run([batch_iterator.initializer, d_clip], 
                          feed_dict={random_input: train_noise, real_data: np_dataset, is_train: True})
                 dis_loss_val = 0
-                for d_iter in range(d_iters)
+                for d_iter in range(d_iters):
                     try:
                         print('d_iter:%i' % d_iter)
-                        batch_it = 0
+                        batch_it = 1
                         while True:
-                            print('batch iter:%i' % batch_it+1)
-                            _, dis_loss_val_inst = sess.run([trainer_d, d_loss])
+                            print('batch iter:%i' % batch_it)
+                            batch_it += 1
+                            _, dis_loss_val_inst = sess.run([trainer_d, d_loss], 
+                                                            feed_dict={random_input: train_noise, real_data: np_dataset, is_train: True})
                             dis_loss_val += dis_loss_val_inst
                     except tf.errors.OutOfRangeError:
                         pass
                 
                 sess.run([batch_iterator.initializer, d_clip], 
-                         feed_dict={random_input: train_noise, is_train: True})
+                         feed_dict={random_input: train_noise, real_data: np_dataset, is_train: Truerandom_input: train_noise, is_train: True})
                 gen_loss_val = 0
-                for g_iter in range(g_iters)
+                for g_iter in range(g_iters):
                     try:
                         print('g_iter:%i' % g_iter)
-                        batch_it = 0
+                        batch_it = 1
                         while True:
-                            print('batch iter:%i' % batch_it+1)
-                            _, gen_loss_val_inst = sess.run([trainer_g, g_loss])
+                            print('batch iter:%i' % batch_it)
+                            batch_it += 1
+                            _, gen_loss_val_inst = sess.run([trainer_g, g_loss], 
+                                                            feed_dict={random_input: train_noise, real_data: np_dataset, is_train: True})
                             gen_loss_val += gen_loss_val_inst
                     except tf.errors.OutOfRangeError:
                         pass
@@ -140,7 +144,7 @@ class T_Thinker():
         
         fake_batch = self.__model.T_gen(random_input, self.__random_dim, is_train, reuse=self.__reuse_flag)
         
-        with tf.Session() as sess
+        with tf.Session() as sess:
             saver = tf.train.Saver()
             sess.run(tf.global_variables_initializer())
             sess.run(tf.local_variables_initializer())
