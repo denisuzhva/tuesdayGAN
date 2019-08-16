@@ -21,5 +21,5 @@ if __name__ == '__main__':
                 RAND_DIM
             )
 
-    #thinker.T_train(L_RATE, MODEL_PATH, TRAIN_BATCH_SIZE)
+    thinker.T_train(L_RATE, MODEL_PATH, TRAIN_BATCH_SIZE)
     thinker.T_test(MODEL_PATH, EPOCH, TEST_BATCH_SIZE, TEST_PATH, TEST_BATCHES)
