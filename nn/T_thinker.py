@@ -28,6 +28,7 @@ class T_Thinker():
         self.__time_domain = time_domain
         self.__channel_num = channel_num
         self.__random_dim = random_dim
+        self.__reuse_flag = False
         self.__model = T_Model(
                 freq_domain, 
                 channel_num
@@ -46,9 +47,11 @@ class T_Thinker():
                                         name='real_drone')
             random_input = tf.placeholder(tf.float32, shape=[None, self.__random_dim], name='rand_input')
             is_train = tf.placeholder(tf.bool, name='is_train')
+        self.__reuse_flag = True
         fake_drone = self.__model.T_gen(random_input, self.__random_dim, is_train)
         real_result = self.__model.T_dis(real_drone, is_train)
         fake_result = self.__model.T_dis(fake_drone, is_train, reuse=True)
+        self.__reuse_flag = True
         d_loss = tf.reduce_mean(fake_result) - tf.reduce_mean(real_result)
         g_loss = -tf.reduce_mean(fake_result)
         t_vars = tf.trainable_variables()
@@ -78,6 +81,8 @@ class T_Thinker():
             ))
         print('start listening...')
         start_time = time.time()
+        dLoss = 0
+        gLoss = 0
         for epoch_iter in range(self.__epoch_num):
             print("Running epoch %i/%i..." % (epoch_iter+1, self.__epoch_num))
             for batch_iter in range(num_o_batches):
@@ -87,15 +92,16 @@ class T_Thinker():
                 train_drone = sess.run(next_batch)
                 #print(train_drone[0, 100, 100, 0])
                 sess.run(d_clip)
-                _, dLoss = sess.run([trainer_d, d_loss],
-                                    feed_dict={random_input: train_noise, real_drone: train_drone, is_train: True})
+                if (epoch_iter + 1) % 1 == 0:
+                    _, dLoss = sess.run([trainer_d, d_loss],
+                                        feed_dict={random_input: train_noise, real_drone: train_drone, is_train: True})
                 if (epoch_iter + 1) % 5 == 0:
                     # train_noise = np.random.uniform(-1.0, 1.0, size=[batch_size, random_dim]).astype(np.float32)
                     _, gLoss = sess.run([trainer_g, g_loss],
                                         feed_dict={random_input: train_noise, is_train: True})
-                    print('train: [%d ep / %d ba], d_loss:%f, g_loss:%f' % (epoch_iter+1, batch_iter+1, dLoss, gLoss))
+                print('train: [%d ep / %d ba], d_loss:%f, g_loss:%f' % (epoch_iter+1, batch_iter+1, -dLoss, -gLoss))
             sess.run(batch_iterator.initializer)    
-            if (epoch_iter + 1) % 100 == 0:
+            if (epoch_iter + 1) % 20 == 0:
                 if not os.path.exists(model_path):
                     os.makedirs(model_path)
                 saver.save(sess, model_path + str(epoch_iter+1))  
@@ -108,7 +114,7 @@ class T_Thinker():
         with tf.variable_scope('input'):
             random_input = tf.placeholder(tf.float32, shape=[None, self.__random_dim], name='rand_input')
             is_train = tf.placeholder(tf.bool, name='is_train')
-        fake_drone = self.__model.T_gen(random_input, self.__random_dim, is_train, reuse=False)
+        fake_drone = self.__model.T_gen(random_input, self.__random_dim, is_train, reuse=self.__reuse_flag)
         sess = tf.Session()
         saver = tf.train.Saver()
         sess.run(tf.global_variables_initializer())
