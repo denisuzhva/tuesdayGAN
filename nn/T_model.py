@@ -13,7 +13,7 @@ class T_Model():
                  channel_num):
         #self.__freq_domain = freq_domain
         self.__channel_num = channel_num
-        self.__c_gen = [512, 256, 128, 64, 32]
+        self.__c_gen = [1024, 512, 256, 128, 64]
         self.__s_gen = freq_domain // 32
         self.__c_dis = [32, 64, 128, 256, 512]
 
