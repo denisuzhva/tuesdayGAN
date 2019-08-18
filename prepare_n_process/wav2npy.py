@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 SAMPLE_RATE = 44100
 BIT_DEPTH = 16
-DATA_DIM = 256
+DATA_DIM = 128
 
 def plotSpecGr(f, t, sg):
     _, (ax1, ax2) = plt.subplots(1, 2,sharey=True, figsize=(14, 6))
@@ -40,9 +40,9 @@ def makeSpecGr(read_path):
    
 def sliceSpecGr(sg_conc):
     n_data_samples = sg_conc.shape[1] // DATA_DIM
-    data_set = np.zeros((DATA_DIM, DATA_DIM, 2, n_data_samples))
+    data_set = np.zeros((n_data_samples, DATA_DIM, DATA_DIM, 2))
     for data_iter in range(n_data_samples):
-        data_set[:, :, :, data_iter] = sg_conc[:, 
+        data_set[data_iter, :, :, :] = sg_conc[:, 
                                                data_iter*DATA_DIM:(data_iter+1)*DATA_DIM,
                                                :]
     return data_set
@@ -53,8 +53,9 @@ if __name__ == '__main__':
     #SLICE
     #WRITE
 
-    read_path = './sunn1.wav'
-    write_path = '../../DGAN_DATASET/sunn1.npy'
+    read_path = '../../TGAN_DATASET/wav/sunn1.wav'
+    write_path = '../../TGAN_DATASET/sunn2/full.npy'
     sg_conc = makeSpecGr(read_path)
-    data_set = sliceSpecGr(sg_conc)
+    data_set = sliceSpecGr(sg_conc).astype('float32')
+    print(data_set.shape)
     np.save(write_path, data_set)

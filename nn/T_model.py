@@ -4,18 +4,19 @@ import numpy as np
 #from T_const import *
 
 
+
 class T_Model():
 
-    def __init__(
-            self, 
-            freq_domain, 
-            channel_num
-        ):
+
+    def __init__(self, 
+                 freq_domain, 
+                 channel_num):
         #self.__freq_domain = freq_domain
         self.__channel_num = channel_num
-        self.__c_gen = [512, 256, 128, 64, 32]
+        self.__c_gen = [1024, 512, 256, 128, 64]
         self.__s_gen = freq_domain // 32
         self.__c_dis = [32, 64, 128, 256, 512]
+
 
     def T_gen(self, input, random_dim, is_train, reuse=False):
         output_dim = self.__channel_num
@@ -62,6 +63,7 @@ class T_Model():
             #bn6 = tf.contrib.layers.batch_norm(conv6, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn6')
             act6 = tf.nn.tanh(conv6, name='act6')
             return act6
+
 
     def T_dis(self, input, is_train, reuse=False):
         with tf.variable_scope('dis') as scope:
