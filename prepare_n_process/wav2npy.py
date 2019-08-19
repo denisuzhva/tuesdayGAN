@@ -53,8 +53,8 @@ if __name__ == '__main__':
     #SLICE
     #WRITE
 
-    read_path = '../../TGAN_DATASET/wav/sunn1.wav'
-    write_path = '../../TGAN_DATASET/sunn2/full.npy'
+    read_path = '../../TGAN_DATASET/wav/anim1.wav'
+    write_path = '../../TGAN_DATASET/anim1/full.npy'
     sg_conc = makeSpecGr(read_path)
     data_set = sliceSpecGr(sg_conc).astype('float32')
     print(data_set.shape)
