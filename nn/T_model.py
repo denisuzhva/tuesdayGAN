@@ -16,7 +16,6 @@ class T_Model():
         self.__s_gen = freq_domain // 32
         self.__lstm_layers = 1
         self.__lstm_direction = 'unidirectional'
-        self.__lstm_dropout = 0.5
         
         self.__c_dis = [32, 64, 128, 256, 512]
 
@@ -27,12 +26,14 @@ class T_Model():
             if reuse:
                 scope.reuse_variables()
 
-            lstm1 = tf.contrib.cudnn_rnn.CudnnLSTM(num_layers=self.__lstm_layers, 
-                                                  num_units=random_dim, 
-                                                  direction=self.__lstm_direction,
-                                                  dropout=self.__lstm_dropout if is_train else 0.,
-                                                  name='lstm1')
-            lstm_out, _ = lstm1(input, initial_state=None, training=is_train)
+            #lstm1 = tf.contrib.cudnn_rnn.CudnnLSTM(num_layers=self.__lstm_layers, 
+            #                                       num_units=random_dim, 
+            #                                       direction=self.__lstm_direction,
+            #                                       dropout=0,
+            #                                       name='lstm1')
+            #lstm_out, _ = lstm1(input, initial_state=None, training=is_train)
+            lstm1 = tf.nn.rnn_cell.BasicLSTMCell(random_dim, forget_bias=1.0, name='lstm1')
+            lstm1_out, _ = tf.nn.dynamic_rnn(cell=lstm1, inputs=input, time_major=False, dtype=tf.float32)
 
             w1 = tf.get_variable('w1', 
                                  shape=[random_dim, self.__s_gen * self.__s_gen * self.__c_gen[0]], 
@@ -42,7 +43,7 @@ class T_Model():
                                  shape=[self.__s_gen * self.__s_gen * self.__c_gen[0]], 
                                  dtype=tf.float32,
                                  initializer=tf.constant_initializer(0.0))
-            flat_conv1 = tf.add(tf.matmul(lstm_out, w1), b1, name='flat_conv1')
+            flat_conv1 = tf.add(tf.matmul(lstm1_out[-1], w1), b1, name='flat_conv1')
             conv1 = tf.reshape(flat_conv1, 
                                shape=[-1, self.__s_gen, self.__s_gen, self.__c_gen[0]], 
                                name='conv1')
