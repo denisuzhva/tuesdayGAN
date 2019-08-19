@@ -11,10 +11,13 @@ class T_Model():
     def __init__(self, 
                  freq_domain, 
                  channel_num):
-        #self.__freq_domain = freq_domain
         self.__channel_num = channel_num
-        self.__c_gen = [1024, 512, 256, 128, 64]
+        self.__c_gen = [512, 256, 128, 64, 32]
         self.__s_gen = freq_domain // 32
+        self.__lstm_layers = 1
+        self.__lstm_direction = 'unidirectional'
+        self.__lstm_dropout = 0.5
+        
         self.__c_dis = [32, 64, 128, 256, 512]
 
 
@@ -23,6 +26,14 @@ class T_Model():
         with tf.variable_scope('gen') as scope:
             if reuse:
                 scope.reuse_variables()
+
+            lstm1 = tf.contrib.cudnn_rnn.CudnnLSTM(num_layers=self.__lstm_layers, 
+                                                  num_units=random_dim, 
+                                                  direction=self.__lstm_direction,
+                                                  dropout=self.__lstm_dropout if is_train else 0.,
+                                                  name='lstm1')
+            lstm_out, _ = lstm1(input, initial_state=None, training=is_train)
+
             w1 = tf.get_variable('w1', 
                                  shape=[random_dim, self.__s_gen * self.__s_gen * self.__c_gen[0]], 
                                  dtype=tf.float32,
@@ -31,7 +42,7 @@ class T_Model():
                                  shape=[self.__s_gen * self.__s_gen * self.__c_gen[0]], 
                                  dtype=tf.float32,
                                  initializer=tf.constant_initializer(0.0))
-            flat_conv1 = tf.add(tf.matmul(input, w1), b1, name='flat_conv1')
+            flat_conv1 = tf.add(tf.matmul(lstm_out, w1), b1, name='flat_conv1')
             conv1 = tf.reshape(flat_conv1, 
                                shape=[-1, self.__s_gen, self.__s_gen, self.__c_gen[0]], 
                                name='conv1')
