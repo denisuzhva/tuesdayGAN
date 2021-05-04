@@ -3,7 +3,7 @@ A generative adversarial network that loves sound art.
 
 ## How to use
 
-1. Preprocess the data: set paths to the .wav and .npy files in `prepare_n_process/wav2npy.py`, then run this script &ndash it converts your music file to a dataset.
+1. Preprocess the data: set paths to the .wav and .npy files in `prepare_n_process/wav2npy.py`, then run this script &ndash; it converts your music file to a dataset.
 2. Uncomment one option in `nn/T_launcher.py` (depending on if you wish to *train* or *test* the model) and comment the other one, then run this script.
 
 ## Dependencies
